@@ -1,0 +1,48 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_TOP_DOWN()
+
+Person(customer, "Клиент", "Пользуется сайтом и интернет-банком")
+
+System_Boundary(bank_system, "Банковская система") {
+
+    Container(web, "Веб-сайт", "PHP/React.js", "Для новых клиентов: просмотр депозитов и кредитов, подача заявок")
+    Container(ib, "Интернет-банк", ".NET Framework 4.5/MSSQL", "Для действующих клиентов: депозиты, кредиты, предодобренные предложения")
+    Container(api, "API Gateway", "FastAPI", "Маршрутизация, авторизация, шифрование")
+
+    Container(deposit, "Deposit Service", "FastAPI/MSSQL", "Управление депозитами и заявками")
+    Container(credit, "Credit Service", "FastAPI/MSSQL", "Управление кредитами и заявками")
+    Container(notify, "Notification Service", "Internal SMS Core", "Отправка SMS-кодов и уведомлений")
+
+    ContainerDb(db, "Databases", "MS SQL / Oracle", "Хранение заявок и клиентских данных")
+
+    Container_Ext(abs, "ABS", "Core Banking", "Хранение и подтверждение депозитов и кредитов")
+    Container_Ext(conveyor, "Credit Conveyor", "Internal", "Полная информация об условиях кредитов")
+    Container_Ext(scoring, "Scoring System", "Internal", "Скоринг клиентов, интеграция с БКИ")
+    Container_Ext(backoffice, "Back-office", "Internal UI", "Обработка заявок менеджерами")
+}
+
+Rel(customer, web, "Просмотр депозитов/кредитов, подача заявки")
+Rel(customer, ib, "Управление депозитами и кредитами")
+
+Rel(web, api, "HTTPs")
+Rel(ib, api, "HTTPs")
+
+Rel(api, deposit, "REST/gRPC")
+Rel(api, credit, "REST/gRPC")
+
+Rel(deposit, abs, "Согласование ставок/заявок", "Internal API / MQ")
+Rel(credit, conveyor, "Получение условий кредита", "Internal API")
+Rel(credit, scoring, "Проверка кредитных историй", "API")
+
+Rel(deposit, db, "Хранение заявок")
+Rel(credit, db, "Хранение заявок")
+
+Rel(deposit, notify, "Отправка SMS уведомлений")
+Rel(credit, notify, "Отправка SMS уведомлений")
+
+Rel(backoffice, abs, "Работа с депозитами/кредитами")
+Rel(backoffice, conveyor, "Работа с условиями кредитов")
+
+@enduml
